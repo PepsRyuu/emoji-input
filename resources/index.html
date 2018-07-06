@@ -1,0 +1,938 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta charset="utf-8" />
+    <title></title>
+    <style>
+        html, body {
+            margin: auto;
+            font-family: Arial, sans-serif;
+        }
+
+        .list {
+            font-family: Segoe UI Emoji;
+            font-size: 28px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            overflow: auto;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 50px;
+        }
+
+        .entry {
+            display: flex;
+            line-height: 50px;
+            width: 50px;
+            justify-content: center;
+            align-items: center;
+            cursor: default;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        .entry[data-focused="true"] {
+            background-color: rgb(153, 192, 223);
+        }
+
+        .entry:hover {
+            background-color: #ddd;
+        }
+
+        .options {
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            height: 50px;
+            background-color: rgb(230, 230, 230);
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+        }
+
+        .size > span {
+            cursor: pointer;
+            -ms-user-select: none;
+            user-select: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="list"></div>
+    <div class="options">
+        <div class="size">
+            <span style="font-weight: bold">Size: </span>
+            <span>Normal</span>
+        </div>
+    </div>
+    <script>
+    var emojis = [{
+        "no": 1,
+        "codes": "1F600",
+        "char": "😀",
+        "name": "grinning face",
+        "keywords": "face | grin | grinning face"
+      },
+      {
+        "no": 2,
+        "codes": "1F601",
+        "char": "😁",
+        "name": "beaming face with smiling eyes",
+        "keywords": "beaming face with smiling eyes | eye | face | grin | smile"
+      },
+      {
+        "no": 3,
+        "codes": "1F602",
+        "char": "😂",
+        "name": "face with tears of joy",
+        "keywords": "face | face with tears of joy | joy | laugh | tear"
+      },
+      {
+        "no": 4,
+        "codes": "1F923",
+        "char": "🤣",
+        "name": "rolling on the floor laughing",
+        "keywords": "face | floor | laugh | rolling | rolling on the floor laughing"
+      },
+      {
+        "no": 5,
+        "codes": "1F603",
+        "char": "😃",
+        "name": "grinning face with big eyes",
+        "keywords": "face | grinning face with big eyes | mouth | open | smile"
+      },
+      {
+        "no": 6,
+        "codes": "1F604",
+        "char": "😄",
+        "name": "grinning face with smiling eyes",
+        "keywords": "eye | face | grinning face with smiling eyes | mouth | open | smile"
+      },
+      {
+        "no": 7,
+        "codes": "1F605",
+        "char": "😅",
+        "name": "grinning face with sweat",
+        "keywords": "cold | face | grinning face with sweat | open | smile | sweat"
+      },
+      {
+        "no": 8,
+        "codes": "1F606",
+        "char": "😆",
+        "name": "grinning squinting face",
+        "keywords": "face | grinning squinting face | laugh | mouth | open | satisfied | smile"
+      },
+      {
+        "no": 9,
+        "codes": "1F609",
+        "char": "😉",
+        "name": "winking face",
+        "keywords": "face | wink | winking face"
+      },
+      {
+        "no": 10,
+        "codes": "1F60A",
+        "char": "😊",
+        "name": "smiling face with smiling eyes",
+        "keywords": "blush | eye | face | smile | smiling face with smiling eyes"
+      },
+      {
+        "no": 11,
+        "codes": "1F60B",
+        "char": "😋",
+        "name": "face savoring food",
+        "keywords": "delicious | face | face savoring food | savouring | smile | um | yum"
+      },
+      {
+        "no": 12,
+        "codes": "1F60E",
+        "char": "😎",
+        "name": "smiling face with sunglasses",
+        "keywords": "bright | cool | eye | eyewear | face | glasses | smile | smiling face with sunglasses | sun | sunglasses"
+      },
+      {
+        "no": 13,
+        "codes": "1F60D",
+        "char": "😍",
+        "name": "smiling face with heart-eyes",
+        "keywords": "eye | face | love | smile | smiling face with heart-eyes"
+      },
+      {
+        "no": 14,
+        "codes": "1F618",
+        "char": "😘",
+        "name": "face blowing a kiss",
+        "keywords": "face | face blowing a kiss | kiss"
+      },{
+        "no": 20,
+        "codes": "1F642",
+        "char": "🙂",
+        "name": "slightly smiling face",
+        "keywords": "face | slightly smiling face | smile"
+      },
+      {
+        "no": 21,
+        "codes": "1F917",
+        "char": "🤗",
+        "name": "hugging face",
+        "keywords": "face | hug | hugging"
+      },{
+        "no": 22,
+        "codes": "1F929",
+        "char": "🤩",
+        "name": "star-struck",
+        "keywords": "eyes | face | grinning | star | star-struck | starry-eyed"
+      },
+      {
+        "no": 23,
+        "codes": "1F914",
+        "char": "🤔",
+        "name": "thinking face",
+        "keywords": "face | thinking"
+      },
+      {
+        "no": 24,
+        "codes": "1F928",
+        "char": "🤨",
+        "name": "face with raised eyebrow",
+        "keywords": "distrust | face with raised eyebrow | skeptic | disapproval | disbelief | mild surprise | scepticism"
+      },
+      {
+        "no": 25,
+        "codes": "1F610",
+        "char": "😐",
+        "name": "neutral face",
+        "keywords": "deadpan | face | neutral"
+      },
+      {
+        "no": 26,
+        "codes": "1F611",
+        "char": "😑",
+        "name": "expressionless face",
+        "keywords": "expressionless | face | inexpressive | unexpressive"
+      },
+      {
+        "no": 27,
+        "codes": "1F636",
+        "char": "😶",
+        "name": "face without mouth",
+        "keywords": "face | face without mouth | mouth | quiet | silent"
+      },
+      {
+        "no": 28,
+        "codes": "1F644",
+        "char": "🙄",
+        "name": "face with rolling eyes",
+        "keywords": "eyes | face | face with rolling eyes | rolling"
+      },
+      {
+        "no": 29,
+        "codes": "1F60F",
+        "char": "😏",
+        "name": "smirking face",
+        "keywords": "face | smirk | smirking face"
+      },
+      {
+        "no": 30,
+        "codes": "1F623",
+        "char": "😣",
+        "name": "persevering face",
+        "keywords": "face | persevere | persevering face"
+      },
+      {
+        "no": 31,
+        "codes": "1F625",
+        "char": "😥",
+        "name": "sad but relieved face",
+        "keywords": "disappointed | face | relieved | sad but relieved face | whew"
+      },
+      {
+        "no": 32,
+        "codes": "1F62E",
+        "char": "😮",
+        "name": "face with open mouth",
+        "keywords": "face | face with open mouth | mouth | open | sympathy"
+      },
+      {
+        "no": 33,
+        "codes": "1F910",
+        "char": "🤐",
+        "name": "zipper-mouth face",
+        "keywords": "face | mouth | zipper | zipper-mouth face"
+      },
+      {
+        "no": 34,
+        "codes": "1F62F",
+        "char": "😯",
+        "name": "hushed face",
+        "keywords": "face | hushed | stunned | surprised"
+      },
+      {
+        "no": 35,
+        "codes": "1F62A",
+        "char": "😪",
+        "name": "sleepy face",
+        "keywords": "face | sleep | sleepy face"
+      },
+      {
+        "no": 36,
+        "codes": "1F62B",
+        "char": "😫",
+        "name": "tired face",
+        "keywords": "face | tired"
+      },
+      {
+        "no": 37,
+        "codes": "1F634",
+        "char": "😴",
+        "name": "sleeping face",
+        "keywords": "face | sleep | sleeping face | zzz"
+      },
+      {
+        "no": 38,
+        "codes": "1F60C",
+        "char": "😌",
+        "name": "relieved face",
+        "keywords": "face | relieved"
+      },
+      {
+        "no": 39,
+        "codes": "1F61B",
+        "char": "😛",
+        "name": "face with tongue",
+        "keywords": "face | face with tongue | tongue"
+      },
+      {
+        "no": 40,
+        "codes": "1F61C",
+        "char": "😜",
+        "name": "winking face with tongue",
+        "keywords": "eye | face | joke | tongue | wink | winking face with tongue"
+      },
+      {
+        "no": 41,
+        "codes": "1F61D",
+        "char": "😝",
+        "name": "squinting face with tongue",
+        "keywords": "eye | face | horrible | squinting face with tongue | taste | tongue"
+      },
+      {
+        "no": 42,
+        "codes": "1F924",
+        "char": "🤤",
+        "name": "drooling face",
+        "keywords": "drooling | face"
+      },
+      {
+        "no": 43,
+        "codes": "1F612",
+        "char": "😒",
+        "name": "unamused face",
+        "keywords": "face | unamused | unhappy"
+      },
+      {
+        "no": 44,
+        "codes": "1F613",
+        "char": "😓",
+        "name": "downcast face with sweat",
+        "keywords": "cold | downcast face with sweat | face | sweat"
+      },
+      {
+        "no": 45,
+        "codes": "1F614",
+        "char": "😔",
+        "name": "pensive face",
+        "keywords": "dejected | face | pensive"
+      },
+      {
+        "no": 46,
+        "codes": "1F615",
+        "char": "😕",
+        "name": "confused face",
+        "keywords": "confused | face"
+      },
+      {
+        "no": 47,
+        "codes": "1F643",
+        "char": "🙃",
+        "name": "upside-down face",
+        "keywords": "face | upside-down"
+      },
+      {
+        "no": 48,
+        "codes": "1F911",
+        "char": "🤑",
+        "name": "money-mouth face",
+        "keywords": "face | money | money-mouth face | mouth"
+      },
+      {
+        "no": 49,
+        "codes": "1F632",
+        "char": "😲",
+        "name": "astonished face",
+        "keywords": "astonished | face | shocked | totally"
+      },{
+        "no": 51,
+        "codes": "1F641",
+        "char": "🙁",
+        "name": "slightly frowning face",
+        "keywords": "face | frown | slightly frowning face"
+      },
+      {
+        "no": 52,
+        "codes": "1F616",
+        "char": "😖",
+        "name": "confounded face",
+        "keywords": "confounded | face"
+      },
+      {
+        "no": 53,
+        "codes": "1F61E",
+        "char": "😞",
+        "name": "disappointed face",
+        "keywords": "disappointed | face"
+      },
+      {
+        "no": 54,
+        "codes": "1F61F",
+        "char": "😟",
+        "name": "worried face",
+        "keywords": "face | worried"
+      },
+      {
+        "no": 55,
+        "codes": "1F624",
+        "char": "😤",
+        "name": "face with steam from nose",
+        "keywords": "face | face with steam from nose | triumph | won"
+      },
+      {
+        "no": 56,
+        "codes": "1F622",
+        "char": "😢",
+        "name": "crying face",
+        "keywords": "cry | crying face | face | sad | tear"
+      },
+      {
+        "no": 57,
+        "codes": "1F62D",
+        "char": "😭",
+        "name": "loudly crying face",
+        "keywords": "cry | face | loudly crying face | sad | sob | tear"
+      },
+      {
+        "no": 58,
+        "codes": "1F626",
+        "char": "😦",
+        "name": "frowning face with open mouth",
+        "keywords": "face | frown | frowning face with open mouth | mouth | open"
+      },
+      {
+        "no": 59,
+        "codes": "1F627",
+        "char": "😧",
+        "name": "anguished face",
+        "keywords": "anguished | face"
+      },
+      {
+        "no": 60,
+        "codes": "1F628",
+        "char": "😨",
+        "name": "fearful face",
+        "keywords": "face | fear | fearful | scared"
+      },
+      {
+        "no": 61,
+        "codes": "1F629",
+        "char": "😩",
+        "name": "weary face",
+        "keywords": "face | tired | weary"
+      },
+      {
+        "no": 62,
+        "codes": "1F92F",
+        "char": "🤯",
+        "name": "exploding head",
+        "keywords": "exploding head | shocked"
+      },
+      {
+        "no": 63,
+        "codes": "1F62C",
+        "char": "😬",
+        "name": "grimacing face",
+        "keywords": "face | grimace | grimacing face"
+      },
+      {
+        "no": 64,
+        "codes": "1F630",
+        "char": "😰",
+        "name": "anxious face with sweat",
+        "keywords": "anxious face with sweat | blue | cold | face | mouth | open | rushed | sweat"
+      },
+      {
+        "no": 65,
+        "codes": "1F631",
+        "char": "😱",
+        "name": "face screaming in fear",
+        "keywords": "face | face screaming in fear | fear | fearful | munch | scared | scream"
+      }, {
+        "no": 68,
+        "codes": "1F633",
+        "char": "😳",
+        "name": "flushed face",
+        "keywords": "dazed | face | flushed"
+      },
+      {
+        "no": 69,
+        "codes": "1F92A",
+        "char": "🤪",
+        "name": "zany face",
+        "keywords": "eye | goofy | large | small | zany face"
+      },
+      {
+        "no": 70,
+        "codes": "1F635",
+        "char": "😵",
+        "name": "dizzy face",
+        "keywords": "dizzy | face"
+      },
+      {
+        "no": 71,
+        "codes": "1F621",
+        "char": "😡",
+        "name": "pouting face",
+        "keywords": "angry | face | mad | pouting | rage | red"
+      },
+      {
+        "no": 72,
+        "codes": "1F620",
+        "char": "😠",
+        "name": "angry face",
+        "keywords": "angry | face | mad"
+      },
+      {
+        "no": 73,
+        "codes": "1F92C",
+        "char": "🤬",
+        "name": "face with symbols on mouth",
+        "keywords": "face with symbols on mouth | swearing | cursing"
+      },
+      {
+        "no": 74,
+        "codes": "1F637",
+        "char": "😷",
+        "name": "face with medical mask",
+        "keywords": "cold | doctor | face | face with medical mask | mask | medicine | sick"
+      },
+      {
+        "no": 75,
+        "codes": "1F912",
+        "char": "🤒",
+        "name": "face with thermometer",
+        "keywords": "face | face with thermometer | ill | sick | thermometer"
+      },
+      {
+        "no": 76,
+        "codes": "1F915",
+        "char": "🤕",
+        "name": "face with head-bandage",
+        "keywords": "bandage | face | face with head-bandage | hurt | injury"
+      },
+      {
+        "no": 77,
+        "codes": "1F922",
+        "char": "🤢",
+        "name": "nauseated face",
+        "keywords": "face | nauseated | vomit"
+      },
+      {
+        "no": 78,
+        "codes": "1F92E",
+        "char": "🤮",
+        "name": "face vomiting",
+        "keywords": "face vomiting | sick | vomit"
+      },
+      {
+        "no": 79,
+        "codes": "1F927",
+        "char": "🤧",
+        "name": "sneezing face",
+        "keywords": "face | gesundheit | sneeze | sneezing face"
+      },
+      {
+        "no": 80,
+        "codes": "1F607",
+        "char": "😇",
+        "name": "smiling face with halo",
+        "keywords": "angel | face | fairy tale | fantasy | halo | innocent | smile | smiling face with halo"
+      },{
+        "no": 87,
+        "codes": "1F92D",
+        "char": "🤭",
+        "name": "face with hand over mouth",
+        "keywords": "face with hand over mouth | whoops | shock | sudden realization | surprise"
+      },
+      {
+        "no": 88,
+        "codes": "1F9D0",
+        "char": "🧐",
+        "name": "face with monocle",
+        "keywords": "face with monocle | stuffy | wealthy"
+      },
+      {
+        "no": 89,
+        "codes": "1F913",
+        "char": "🤓",
+        "name": "nerd face",
+        "keywords": "face | geek | nerd"
+      },{
+        "no": 90,
+        "codes": "1F608",
+        "char": "😈",
+        "name": "smiling face with horns",
+        "keywords": "face | fairy tale | fantasy | horns | smile | smiling face with horns"
+      },{
+        "no": 101,
+        "codes": "1F4A9",
+        "char": "💩",
+        "name": "pile of poo",
+        "keywords": "comic | dung | face | monster | pile of poo | poo | poop"
+      },{
+        "no": 363,
+        "codes": "1F4AA",
+        "char": "💪",
+        "name": "flexed biceps",
+        "keywords": "biceps | comic | flex | flexed biceps | muscle"
+      },{
+        "no": 366,
+        "codes": "1F448",
+        "char": "👈",
+        "name": "backhand index pointing left",
+        "keywords": "backhand | backhand index pointing left | finger | hand | index | point"
+      },
+      {
+        "no": 367,
+        "codes": "1F449",
+        "char": "👉",
+        "name": "backhand index pointing right",
+        "keywords": "backhand | backhand index pointing right | finger | hand | index | point"
+      },
+      {
+        "no": 368,
+        "codes": "261D",
+        "char": "☝",
+        "name": "index pointing up",
+        "keywords": "finger | hand | index | index pointing up | point | up"
+      },
+      {
+        "no": 369,
+        "codes": "1F446",
+        "char": "👆",
+        "name": "backhand index pointing up",
+        "keywords": "backhand | backhand index pointing up | finger | hand | index | point | up"
+      },
+      {
+        "no": 370,
+        "codes": "1F595",
+        "char": "🖕",
+        "name": "middle finger",
+        "keywords": "finger | hand | middle finger"
+      },
+      {
+        "no": 371,
+        "codes": "1F447",
+        "char": "👇",
+        "name": "backhand index pointing down",
+        "keywords": "backhand | backhand index pointing down | down | finger | hand | index | point"
+      },
+      {
+        "no": 372,
+        "codes": "270C",
+        "char": "✌",
+        "name": "victory hand",
+        "keywords": "hand | v | victory"
+      },
+      {
+        "no": 373,
+        "codes": "1F91E",
+        "char": "🤞",
+        "name": "crossed fingers",
+        "keywords": "cross | crossed fingers | finger | hand | luck"
+      },
+      {
+        "no": 374,
+        "codes": "1F596",
+        "char": "🖖",
+        "name": "vulcan salute",
+        "keywords": "finger | hand | spock | vulcan | vulcan salute"
+      },
+      {
+        "no": 375,
+        "codes": "1F918",
+        "char": "🤘",
+        "name": "sign of the horns",
+        "keywords": "finger | hand | horns | rock-on | sign of the horns"
+      },
+      {
+        "no": 376,
+        "codes": "1F919",
+        "char": "🤙",
+        "name": "call me hand",
+        "keywords": "call | call me hand | hand"
+      },
+      {
+        "no": 377,
+        "codes": "1F590",
+        "char": "🖐",
+        "name": "hand with fingers splayed",
+        "keywords": "finger | hand | hand with fingers splayed | splayed"
+      },
+      {
+        "no": 378,
+        "codes": "270B",
+        "char": "✋",
+        "name": "raised hand",
+        "keywords": "hand | raised hand"
+      },
+      {
+        "no": 379,
+        "codes": "1F44C",
+        "char": "👌",
+        "name": "OK hand",
+        "keywords": "hand | OK"
+      },
+      {
+        "no": 380,
+        "codes": "1F44D",
+        "char": "👍",
+        "name": "thumbs up",
+        "keywords": "+1 | hand | thumb | thumbs up | up"
+      },
+      {
+        "no": 381,
+        "codes": "1F44E",
+        "char": "👎",
+        "name": "thumbs down",
+        "keywords": "-1 | down | hand | thumb | thumbs down"
+      },
+      {
+        "no": 382,
+        "codes": "270A",
+        "char": "✊",
+        "name": "raised fist",
+        "keywords": "clenched | fist | hand | punch | raised fist"
+      },
+      {
+        "no": 383,
+        "codes": "1F44A",
+        "char": "👊",
+        "name": "oncoming fist",
+        "keywords": "clenched | fist | hand | oncoming fist | punch"
+      },
+      {
+        "no": 384,
+        "codes": "1F91B",
+        "char": "🤛",
+        "name": "left-facing fist",
+        "keywords": "fist | left-facing fist | leftwards"
+      },
+      {
+        "no": 385,
+        "codes": "1F91C",
+        "char": "🤜",
+        "name": "right-facing fist",
+        "keywords": "fist | right-facing fist | rightwards"
+      },
+      {
+        "no": 386,
+        "codes": "1F91A",
+        "char": "🤚",
+        "name": "raised back of hand",
+        "keywords": "backhand | raised | raised back of hand"
+      },
+      {
+        "no": 387,
+        "codes": "1F44B",
+        "char": "👋",
+        "name": "waving hand",
+        "keywords": "hand | wave | waving"
+      },
+      {
+        "no": 388,
+        "codes": "1F91F",
+        "char": "🤟",
+        "name": "love-you gesture",
+        "keywords": "hand | ILY | love-you gesture"
+      },
+      {
+        "no": 389,
+        "codes": "270D",
+        "char": "✍",
+        "name": "writing hand",
+        "keywords": "hand | write | writing hand"
+      },
+      {
+        "no": 390,
+        "codes": "1F44F",
+        "char": "👏",
+        "name": "clapping hands",
+        "keywords": "clap | clapping hands | hand"
+      },
+      {
+        "no": 391,
+        "codes": "1F450",
+        "char": "👐",
+        "name": "open hands",
+        "keywords": "hand | open | open hands"
+      },
+      {
+        "no": 392,
+        "codes": "1F64C",
+        "char": "🙌",
+        "name": "raising hands",
+        "keywords": "celebration | gesture | hand | hooray | raised | raising hands"
+      },
+      {
+        "no": 393,
+        "codes": "1F932",
+        "char": "🤲",
+        "name": "palms up together",
+        "keywords": "palms up together | prayer | cupped hands"
+      },
+      {
+        "no": 394,
+        "codes": "1F64F",
+        "char": "🙏",
+        "name": "folded hands",
+        "keywords": "ask | bow | folded | folded hands | gesture | hand | please | pray | thanks"
+      },
+      {
+        "no": 395,
+        "codes": "1F91D",
+        "char": "🤝",
+        "name": "handshake",
+        "keywords": "agreement | hand | handshake | meeting | shake"
+      },{
+        "no": 404,
+        "codes": "1F440",
+        "char": "👀",
+        "name": "eyes",
+        "keywords": "eye | eyes | face"
+      },{
+        "no": 414,
+        "codes": "2764",
+        "char": "❤",
+        "name": "red heart",
+        "keywords": "heart | red heart"
+      },
+      {
+        "no": 415,
+        "codes": "1F493",
+        "char": "💓",
+        "name": "beating heart",
+        "keywords": "beating | beating heart | heartbeat | pulsating"
+      },
+      {
+        "no": 416,
+        "codes": "1F494",
+        "char": "💔",
+        "name": "broken heart",
+        "keywords": "break | broken | broken heart"
+      }]
+
+        var list = document.body.querySelector('.list');
+
+        var sizes = {
+            'Normal': '20px',
+            'Large': '49px'
+        };
+
+        var activeSize = 'Normal';
+        var sizeEl = document.querySelector('.size');
+        sizeEl.addEventListener('click', toggleSize);
+
+        function toggleSize () {
+            activeSize = activeSize === 'Normal'? 'Large' : 'Normal';
+            sizeEl.querySelector('span:nth-child(2)').textContent = activeSize;
+        }
+
+        emojis.forEach(function (emoji) {
+            var el = document.createElement('div');
+            el.setAttribute('class', 'entry');
+            el.textContent = emoji.char;
+            list.appendChild(el);
+            el.addEventListener('click', function () {
+                window.SendEmoji(el.textContent, sizes[activeSize]);
+            });
+        });
+
+        var entries = document.body.querySelectorAll('.entry');
+        var index = 0;
+        entries[index].setAttribute('data-focused', 'true');
+
+        var Keys = {
+            UP: 38,
+            DOWN: 40
+        };
+
+        function ApplyIndex (delta) {
+            index += delta
+
+            if (index < 0) {
+                index = 0;
+            } else if (index > entries.length - 1) {
+                index = entries.length - 1;
+            }
+
+            document.body.querySelectorAll('[data-focused]')[0].removeAttribute('data-focused');
+            entries[index].setAttribute('data-focused', 'true');
+            scrollIntoView(entries[index]);
+
+        }
+
+        function scrollIntoView (el) {
+            var parent = el.offsetParent.getBoundingClientRect();
+            var rect = el.getBoundingClientRect();
+
+            if (rect.bottom < parent.top || rect.top < parent.top) {
+                el.offsetParent.scrollTop = el.offsetTop;
+            } else if (rect.bottom > parent.bottom || rect.top > parent.bottom) {
+                el.offsetParent.scrollTop = el.offsetTop - (parent.height - el.offsetHeight);
+            }
+        }
+
+        function KeyEvent (key) {
+            if (key === 'ArrowLeft') {
+                ApplyIndex(-1);
+            } 
+
+            if (key === 'ArrowRight') {
+                ApplyIndex(1);
+            }
+
+            if (key === 'ArrowUp') {
+                ApplyIndex(-7);
+            }
+
+            if (key === 'ArrowDown') {
+                ApplyIndex(7);
+            }
+
+            if (key === 'Shift') {
+                toggleSize();
+            }
+
+            if (key === 'Enter') {
+                window.SendEmoji(entries[index].textContent, sizes[activeSize]);
+            }
+        }
+    </script>
+</body>
+</html>
