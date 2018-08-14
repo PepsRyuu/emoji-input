@@ -75,7 +75,7 @@ bool CopyToClipboard(std::string html, std::string plain) {
 		wcscpy(uptr, wplain.c_str());
 		GlobalUnlock(hUnicodeText);
 
-		::SetClipboardData(cfid, hText);	
+		::SetClipboardData(cfid, hText);
 		::SetClipboardData(CF_UNICODETEXT, hUnicodeText);
 
 		CloseClipboard();

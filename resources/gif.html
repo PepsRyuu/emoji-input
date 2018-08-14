@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta charset="utf-8" />
+    <title>gif</title>
+    <style>
+        html, body {
+            margin: auto;
+            font-family: Arial, sans-serif;
+        }
+
+        .list {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 50px;
+            overflow: auto;
+            display: flex;
+            flex-wrap: wrap;            
+            justify-content: center;
+        }
+
+        .list span {
+            display: flex;
+            height: 100%;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .list:empty::after {
+            content: '';
+            position: absolute;
+            top: calc(50% - 50px);
+            left: calc(50% - 50px);
+            width: 100px;
+            height: 100px;
+            box-sizing: border-box;
+            border-radius: 50%;
+            border: 6px solid white;
+            border-color: #555 #555 #555 transparent;
+            animation: Loader 1s ease-in-out infinite;
+        }
+
+        @keyframes Loader {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .search {
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            height: 50px;
+            background-color: rgb(230, 230, 230);
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+        }
+
+        .search form {
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+
+        .search input {
+            border: none;
+            background-color: transparent;
+            font-size: 20px;
+            padding: 10px;
+            outline: none;
+            width: calc(100% - 64px);
+        }
+
+        input::-ms-clear {
+            display: none;
+        }
+
+        .search button {
+            border: none;
+            background-color: transparent;
+            outline: none;
+            cursor: pointer;
+            width: ;
+        }
+
+        .entry {
+            width: 100px;
+            height: 100px;
+            display: inline-block;
+            overflow: hidden;
+            margin: 8px 8px 8px 8px;
+            box-sizing: border-box;
+            border: 5px solid transparent;
+        }
+
+        .entry video, .entry img {
+            height: 100%;
+            width: 100%;
+            object-fit: fill;
+        }
+
+        .entry[data-focused="true"] {
+            border-color: rgb(153, 192, 223);
+        }
+
+
+        .entry:hover {
+            border-color: #ddd;
+        }
+        
+    </style>
+</head>
+<body>
+    <div class="search">
+        <input type="text" placeholder="Search...">
+        <button>
+            <svg width="24" height="24" viewBox="0 0 32 32">
+              <g stroke="#555" stroke-width="3" fill="none">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <rect x="0" y="0" width="1" height="12" transform=" translate(20 20) rotate(-45)"></rect>
+              </g>
+            </svg>
+        </button>
+    </div>
+    <div class="list"><span>Start Searching! ^__^</span></div>
+    <script>
+        var API_KEY = '<API_KEY>'; // Replace with your own key.
+        var LIMIT = 15;
+        var OFFSET = 0;
+        var RATING = 'G';
+        var LANG = 'en';
+        
+        var list = document.querySelector('.list');
+        var entries = document.querySelectorAll('.entry');
+        var input = document.querySelector('.search input');
+        var index = -1;
+        var timeout;
+
+        function queueSearch () {
+            list.innerHTML = '';
+
+            if (timeout) {
+                clearTimeout(timeout);
+            }
+
+            timeout = setTimeout(search, 1000);
+        }
+
+        function search (e) {
+            if (e) {
+                e.preventDefault();
+            }
+            
+            list.innerHTML = '';
+            var q = document.querySelector('input').value;
+            var url = 'https://api.giphy.com/v1/gifs/search';
+
+            url += '?api_key=' + API_KEY;
+            url += '&q=' + q;
+            url += '&limit=' + LIMIT;
+            url += '&offset=' + OFFSET;
+            url += '&rating=' + RATING;
+            url += '&lang=' + LANG;
+
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', url, true);
+            xhr.onload = function () {
+                var result = JSON.parse(xhr.responseText);
+                result.data.forEach(function (entry) {
+                    var el = document.createElement('div');
+                    el.setAttribute('class', 'entry');
+                    el.setAttribute('data-image', entry.images.original.url)
+
+                    var gif = document.createElement('img');
+                    gif.setAttribute('src', entry.images.preview_gif.url);
+                    el.appendChild(gif);
+                    list.appendChild(el);
+                });
+
+                if (result.data.length === 0) {
+                    list.innerHTML = '<span>Your search came back empty...</span>';
+                } else {
+                    index = 0;
+                    entries = document.querySelectorAll('.entry');
+                    ApplyIndex(0);
+                }
+
+                
+            }
+
+            xhr.send();
+        }
+
+        function ApplyIndex (delta) {
+            index += delta
+
+            if (index < 0) {
+                index = 0;
+            } else if (index > entries.length - 1) {
+                index = entries.length - 1;
+            }
+
+            var focused = document.querySelector('[data-focused]');
+            if (focused) {
+                focused.removeAttribute('data-focused')
+            }
+
+            entries[index].setAttribute('data-focused', 'true');
+            scrollIntoView(entries[index]);
+
+        }
+
+        function scrollIntoView (el) {
+            var parent = el.offsetParent.getBoundingClientRect();
+            var rect = el.getBoundingClientRect();
+
+            if (rect.bottom < parent.top || rect.top < parent.top) {
+                el.offsetParent.scrollTop = el.offsetTop;
+            } else if (rect.bottom > parent.bottom || rect.top > parent.bottom) {
+                el.offsetParent.scrollTop = el.offsetTop - (parent.height - el.offsetHeight);
+            }
+        }
+
+        function KeyEvent (key) {
+            if (key === 'ArrowLeft') {
+                ApplyIndex(-1);
+            } 
+
+            if (key === 'ArrowRight') {
+                ApplyIndex(1);
+            }
+
+            if (key === 'ArrowUp') {
+                ApplyIndex(-3);
+            }
+
+            if (key === 'ArrowDown') {
+                ApplyIndex(3);
+            }
+
+            if (key === 'Enter') {
+                if (entries[index]) {
+                    window.SendGIF(entries[index].getAttribute('data-image'));
+                }
+                
+            }
+
+            if (/^[a-zA-Z0-9 ]$/.test(key)) {
+                input.value += key;
+                queueSearch();
+            }
+
+            if (key === 'Space') {
+                input.value += ' ';
+                queueSearch();
+            }
+
+            if (key === 'Backspace') {
+                input.value = input.value.substring(0, input.value.length - 1);
+                queueSearch();
+            }
+        }
+    </script>
+</body>
+</html>

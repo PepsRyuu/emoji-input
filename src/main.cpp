@@ -47,16 +47,23 @@ int main(int argc, const char *argv[]) {
   menu->Append(menuItemExit.get());
   
   // Load up the HTML for the selector
-  std::string filename("resources/index.html");
-  std::ifstream file(filename.c_str());
-  std::stringstream buffer;
-  buffer << file.rdbuf();
-  std::string html = buffer.str();
+  std::string emojifilename("resources/index.html");
+  std::ifstream emojifile(emojifilename.c_str());
+  std::stringstream emojibuffer;
+  emojibuffer << emojifile.rdbuf();
+  std::string emojihtml = emojibuffer.str();
+
+  // Load up the HTML for the selector
+  std::string giffilename("resources/gif.html");
+  std::ifstream giffile(giffilename.c_str());
+  std::stringstream gifbuffer;
+  gifbuffer << giffile.rdbuf();
+  std::string gifhtml = gifbuffer.str();
 
   nu::Browser* browser;
   nu::Window*  window;
 
-  RegisterShortcut([&html, &browser, &window]() {
+  RegisterShortcut([&emojihtml, &gifhtml, &browser, &window]() {
 	  
 	  auto activeWindow = ForegroundWindowGet();
 	  Point point = ForegroundPositionGet(activeWindow);
@@ -64,8 +71,8 @@ int main(int argc, const char *argv[]) {
 	  nu::Browser::Options browserOptions;
 	  browserOptions.context_menu = true;
 	  browser = new nu::Browser(browserOptions);
-	  browser->LoadHTML(html, "http://localhost/");
-
+	  browser->LoadHTML(emojihtml, "http://localhost/emoji.html");
+	  
 	  window = new nu::Window(nu::Window::Options());
 	  window->SetContentView(browser);
 	  window->SetContentSize(nu::SizeF(400, 400));
@@ -95,10 +102,24 @@ int main(int argc, const char *argv[]) {
 		  PasteFromClipboard(id);
 	  });
 
-	  StartCapturingKeyboard([&browser, &window](nu::KeyboardCode key) {
+	  browser->AddBinding("SendGIF", [](nu::Browser* browser, const std::string& url) {
+		  CopyToClipboard("<img src='" + url + "'>", "");
+		  auto id = ForegroundWindowGet();
+		  browser->GetWindow()->Close();
+		  PasteFromClipboard(id);
+	  });
+
+	  StartCapturingKeyboard([&browser, &window, &emojihtml, &gifhtml](nu::KeyboardCode key) {
 		  if (key == nu::KeyboardCode::VKEY_ESCAPE) {
 			  window->Close();
-		  }
+		  } else if (key == 191) {
+			  if (strcmp(browser->GetTitle().c_str(), "Emoji") == 0) {
+				  browser->LoadHTML(gifhtml, "http://localhost/gif.html");
+			  }
+			  else {
+				  browser->LoadHTML(emojihtml, "http://localhost/emoji.html");
+			  }
+          }
 		  else {
 			  auto strKey = nu::KeyboardCodeToStr(key);
 			  std::string code = "KeyEvent('" + std::string(strKey) + "')";
